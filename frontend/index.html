@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .task-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .task-form input, .task-form select, .task-form button {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .task-form input {
+      flex: 1;
+    }
+
+    .task-form button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .task-form button:hover {
+      background: #0056b3;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f9fafc;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .task-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background: #a71d2a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Task Tracker</h1>
+
+    <div class="task-form">
+      <input type="text" id="taskName" placeholder="Enter task name" />
+      <select id="taskStatus">
+        <option value="pending">Pending</option>
+        <option value="completed">Completed</option>
+      </select>
+      <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:5000/tasks";
+
+    async function loadTasks() {
+      const response = await fetch(API_URL);
+      const tasks = await response.json();
+
+      const taskList = document.getElementById("taskList");
+      taskList.innerHTML = "";
+
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="task-info">
+            <strong>${task.task_name}</strong>
+            <span class="status">Status: ${task.status}</span>
+          </div>
+          <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    async function addTask() {
+      const taskName = document.getElementById("taskName").value;
+      const taskStatus = document.getElementById("taskStatus").value;
+
+      if (!taskName) {
+        alert("Please enter a task name");
+        return;
+      }
+
+      await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          task_name: taskName,
+          status: taskStatus
+        })
+      });
+
+      document.getElementById("taskName").value = "";
+      loadTasks();
+    }
+
+    async function deleteTask(taskId) {
+      await fetch(`${API_URL}/${taskId}`, {
+        method: "DELETE"
+      });
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
